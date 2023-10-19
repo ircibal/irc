@@ -14,12 +14,13 @@
 //두명 있을때 한명 나가면 서버도 꺼짐
 
 void Server::send_msg(std::string msg, int fd) { //메세지 전송하는 함수
-	std::cout << msg << std::endl;
+	std::cout << ">>>norma>>>" <<msg << std::endl;
 	send(fd, msg.c_str(), msg.size(), 0);
 }
 
 void Server::broadcastChannelMessage(std::string message, int send_fd) {
 	(void)send_fd; ///????
+	std::cout << ">>>Broad>>>" << message << std::endl;
 	for (std::map<int,Client>::iterator iter = this->usrlist.begin();
 	iter != this->usrlist.end(); iter++) {
 		send_msg(message, iter->first);
@@ -202,10 +203,16 @@ void Server::handle_cmd(std::string cmd, int fd) { // 메세지 파싱하는 함
 		// ERR_NOSUCHNICK: 존재하지 않는 유저
 		Client *invite_client = this->search_user(token[1]);
 		if (invite_client == NULL) {
-			std::string str = "401 " + user.username + " "+ token[1] + " :No such nick" + "\r\n";
-			std::cout<< ": irc.local " + str<< std::endl;
+			std::string str;
+			std::cin >> str;
 			
-			this->send_msg(ERR_NOSUCHNICK(user.getPrefix(), token[1]), fd);
+			this->send_msg(":root " + (ERR_NOSUCHNICK(user.nickname, token[1])), fd);
+			this->send_msg(":root " + (ERR_NOSUCHNICK(user.getPrefix(), token[1])), fd);
+			this->send_msg(":irc.local " + (ERR_NOSUCHNICK(user.getPrefix(), token[1])), fd);
+			this->send_msg(":root 401 siw e :No such nick\r\n", fd);
+			this->send_msg(":irc.local 401 siw e :No such nick\r\n", fd);
+			this->send_msg(":ircserv siw e :No such nick\r\n", fd);
+			this->send_msg(":irc.local 401 siw e :No such nick\r\n", fd);
 			return ;
 		}
 

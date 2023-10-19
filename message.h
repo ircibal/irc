@@ -1,6 +1,8 @@
 #ifndef MESSAGE_H
 # define MESSAGE_H
 // error
+# define MSG_USER (user) "!" + user
+# define MSG_HOST
 # define ERR_TOOMANYCHANNELS(user, channel) "405 " + user + " " + channel + " :You have joined too many channels" + "\r\n"
 # define ERR_NONICKNAMEGIVEN(user) "431 " + user + " :Nickname not given" + "\r\n"
 # define ERR_NICKNAMEINUSE(user) "433 " + user + " " + user + " :Nickname is already in use" + "\r\n"
