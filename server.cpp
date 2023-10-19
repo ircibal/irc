@@ -205,7 +205,7 @@ void Server::handle_cmd(std::string cmd, int fd) { // 메세지 파싱하는 함
 			std::string str = "401 " + user.username + " "+ token[1] + " :No such nick" + "\r\n";
 			std::cout<< ": irc.local " + str<< std::endl;
 			
-			this->send_msg(": irc.local " + str, fd);
+			this->send_msg(ERR_NOSUCHNICK(user.getPrefix(), token[1]), fd);
 			return ;
 		}
 
