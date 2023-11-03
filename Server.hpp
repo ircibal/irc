@@ -11,11 +11,11 @@ class Server {
 		~Server();
 
 		// Getter
-		const std::string&						getServerName() const;		// 서버 이름 가져오기
-		const std::string&						getServerPassword() const;	// 서버 비밀번호 가져오기
-		const std::map<int, Client *>&			getUserList() const;		// 유저 목록 가져오기
+		const std::string&	getServerName() const;							// 서버 이름 가져오기
+		const std::string&	getServerPassword() const;						// 서버 비밀번호 가져오기
+		const std::map<int, Client *>&	getUserList() const;				// 유저 목록 가져오기
 		const std::map<std::string, Channel *>&	getChannelList() const;		// 채널 목록 가져오기
-		bool									getAuth(Client const *user); // 인증 내역 확인하기
+		bool	getAuth(Client const *user);								// 인증 내역 확인하기
 
 		// Setter
 		void	setServerName(const std::string& server_name);
@@ -26,10 +26,10 @@ class Server {
 		void	removeChannelList(const std::string& channel_name);					// 채널목록에서 채널 삭제
 
 		// Server
-		void	serverInit(int argc, char **argv);
+		void	serverInit(char **argv);
 		void	changeEvents(std::vector<struct kevent>& change_list, uintptr_t ident,
 				int16_t filter, uint16_t flags, uint32_t fflags, intptr_t data, void *udata);
-		void	disconnectClient(int client_fd,	std::map<int, std::string>	clients);
+		void	disconnectClient(int client_fd);
 		void	parsingData(int fd);
 
 		// Channel
@@ -40,7 +40,7 @@ class Server {
 		// Message
 		void	sendMessage(std::string message, int fd);									// 메세지 보내기
 		void	broadcastChannelMessage(std::string message, Channel *ch);					// 채널에 메세지 보내기 (본인 포함)
-		void	broadcastChannelMessage(std::string message, Channel *ch, int socket_fd);				// 채널에 메세지 보내기 (본인 제외)
+		void	broadcastChannelMessage(std::string message, Channel *ch, int socket_fd);	// 채널에 메세지 보내기 (본인 제외)
 
 		// Command
 		void	handleCommand(std::string command, int fd);								// 명령어 처리
@@ -48,6 +48,7 @@ class Server {
 		void	kickUser(std::string channel_name, std::vector<std::string> param);		// 유저 강퇴
 		void	inviteUser(std::string channel_name, std::vector<std::string> param);	// 유저 초대
 
+		// Search
 		Client	*searchClient(std::string nickname);	// 유저 검색
 		Client	*searchClient(int fd);
 		Client	*searchTemp(int fd);					// 임시 유저 검색 - 인증 전 유저들
@@ -65,28 +66,26 @@ class Server {
 		void	commandQuit(std::vector<std::string> token, Client * user, int fd);
 		void	commandTopic(std::vector<std::string> token, Client * user, int fd);
 		void	commandMode(std::vector<std::string> token, Client * user, int fd);
-		//구현전 - 매개변수 임의로 넣어둠
-		void	commandList(std::vector<std::string> token, Client * user, int fd);
 		void	commandKick(std::vector<std::string> token, Client * user, int fd);
 
 	private :
-		int							_server_socket;
-		struct sockaddr_in			_server_addr;
+		int	_server_socket;
+		struct sockaddr_in	_server_addr;
 		std::map<int, std::string>	_clients;
 		std::vector<struct kevent>	_change_list;
-		struct kevent				_event_list[8];
-		int							_new_events;
-		struct kevent*				_curr_event;
+		struct kevent	_event_list[8];
+		int	_new_events;
+		struct kevent*	_curr_event;
 
 		//============================서버구동부 건들지 마시오===================================
-		std::map<int, std::string>	_send_data; //전송할 데이터
-		std::map<int, std::string>	_recv_data; //읽은 데이터
+		std::map<int, std::string>	_send_data;		//전송할 데이터
+		std::map<int, std::string>	_recv_data;		//읽은 데이터
 
-		std::string							_server_name;		//서버이름
-		std::string							_server_password;	//서버비밀번호
+		std::string	_server_name;								//서버이름
+		std::string	_server_password;							//서버비밀번호
 		std::map<std::string, Channel *>	_channel_list;		//채널목록
-		std::map<int, Client *>				_user_list;			//유저목록
-		std::map<int, Client *>				_temp_list;		//임시 유저 목록
+		std::map<int, Client *>	_user_list;						//유저목록
+		std::map<int, Client *>	_temp_list;						//임시 유저 목록
 
 		Server(const Server& copy);
 		Server& operator=(const Server& obj);

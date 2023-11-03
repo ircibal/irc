@@ -20,27 +20,10 @@ Client::Client(int socket_fd) : _socket_fd(socket_fd), _pass(false) {
 	_channel_list = std::map<std::string, Channel *>();
 }
 
-// Client::Client(const Client& copy) {
-// 	*this = copy;
-// }
-
-// Client& Client::operator=(const Client& obj) {
-// 	if (this == &obj)
-// 		return *this;
-// 	_socket_fd = obj.getSocketFd();
-// 	_nickname = obj.getNickname();
-// 	_username = obj.getUsername();
-// 	_hostname = obj.getHostname();
-// 	_realname = obj.getRealname();
-// 	_user_ip = obj.getUserIp();
-// 	return *this;
-// }
-
-Client::Client(int socket_fd, std::string nickname, std::string username, \
-	std::string hostname, std::string realname, std::string user_ip) \
-: _socket_fd(socket_fd), _nickname(nickname), _username(username), \
-_hostname(hostname), _realname(realname), _user_ip(user_ip), \
-_pass(false){
+Client::Client(int socket_fd, std::string nickname, std::string username,
+std::string hostname, std::string realname, std::string user_ip)
+: _socket_fd(socket_fd), _nickname(nickname), _username(username), _hostname(hostname),
+_realname(realname), _user_ip(user_ip), _pass(false){
 	_channel_list = std::map<std::string, Channel *>();
 	_channel_limit = CLIENT_CHANNEL_LIMIT;
 }
@@ -59,9 +42,9 @@ const std::string&	Client::getRealname() const { return _realname; };
 
 const std::string&	Client::getUserIp() const { return _user_ip; };
 
-bool				Client::getPass() const { return _pass; };
+bool	Client::getPass() const { return _pass; };
 
-int					Client::getChannelLimit() const { return _channel_limit; };
+int	Client::getChannelLimit() const { return _channel_limit; };
 
 const std::map<std::string, Channel *>&	Client::getChannelList() const { return _channel_list; };
 
@@ -90,11 +73,9 @@ int	Client::checkChannelLimit() const{
 	if (cnt < this->_channel_limit)
 		return (0);
 	return (-1);
-};
-
-void	Client::removeChannelList(Channel *channel) {
-	_channel_list.erase(channel->getChannelName());
 }
+
+void	Client::removeChannelList(Channel *channel) { _channel_list.erase(channel->getChannelName()); }
 
 std::string	Client::getPrefix() const {
 	std::string username = "!" + _username;
