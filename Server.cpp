@@ -62,8 +62,6 @@ void	Server::serverInit(char **argv) {
 	}
 
 	changeEvents(_change_list, _server_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	std::cout << "echo server started" <<std::endl;
-
 	while (1) {
 		_new_events = kevent(kq, &_change_list[0], _change_list.size(),
 			_event_list, 10, NULL);
@@ -79,19 +77,14 @@ void	Server::serverInit(char **argv) {
 					std::cout << "server socket error" << std::endl;
 					exit(0);
 				}
-				else {
-					std::cerr << "client socket error" << std::endl;
+				else
 					disconnectClient(_curr_event->ident);
-				}
 			}
 			else if (_curr_event->filter == EVFILT_READ) {
 				if ((int) _curr_event->ident == _server_socket) {
 					int client_socket = accept(_server_socket, NULL, NULL);
-					if (client_socket == -1) {
-						std::cout << " error" << std::endl;
+					if (client_socket == -1)
 						exit(0);
-					}
-					std::cout << "accept new client: " << client_socket << std::endl;
 					fcntl(client_socket, F_SETFL, O_NONBLOCK);
 					changeEvents(_change_list, client_socket, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
 					changeEvents(_change_list, client_socket, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
@@ -100,16 +93,12 @@ void	Server::serverInit(char **argv) {
 				else if (_clients.find(_curr_event->ident) != _clients.end()) {
 					char buf[1024];
 					int n = recv(_curr_event->ident, buf, sizeof(buf) - 1, 0);
-					if (n <= 0) {
-						if (n < 0)
-							std::cerr << "client read error!" << std::endl;
+					if (n <= 0)
 						disconnectClient(_curr_event->ident);
-					}
 					else {
 						std::map<int, std::string>::iterator it = _clients.find(_curr_event->ident);
 						buf[n] = '\0';
 						_clients[_curr_event->ident] += buf;
-						std::cout << "msg from " << it->second << ":\n" << _clients[_curr_event->ident] << std::endl;
 						parsingData(_curr_event->ident);
 					}
 				}
@@ -119,13 +108,10 @@ void	Server::serverInit(char **argv) {
 				if (it != _clients.end()) {
 					// 내가 보내는거
 					if (!_send_data[_curr_event->ident].empty()) {
-						std::cout << "send data from" << it->second << ": " << _send_data[_curr_event->ident] << std::endl;
 						int n = send(_curr_event->ident, _send_data[_curr_event->ident].c_str(),
 							_send_data[_curr_event->ident].size(), 0);
-						if (n == -1) {
-							std::cerr << "client write error!" << std::endl;
+						if (n == -1)
 							disconnectClient(_curr_event->ident);
-						}
 						else
 							_send_data[_curr_event->ident].clear();
 					}
@@ -144,7 +130,6 @@ void	Server::changeEvents(std::vector<struct kevent>& change_list, uintptr_t ide
 }
 
 void	Server::disconnectClient(int client_fd) {
-	std::cout << "client disconnected: " << client_fd << std::endl;
 	close(client_fd);
 	this->_clients.erase(client_fd);
 	std::map<int, Client *>::iterator it;
@@ -173,12 +158,9 @@ void	Server::parsingData(int fd) {
 			line = _clients[fd].substr(0, pos + 2);
 			token.push_back(line);
 			_clients[fd].erase(0, pos + 2);
-			std::cout << "token : " << line << std::endl;
 		}
-		else {
-			std::cout << "remain : " << _clients[fd] << std::endl;
+		else
 			break;
-		}
 	}
 	for (size_t i = 0; i < token.size();i++) {
 		std::istringstream input_str(token[i]);
@@ -201,10 +183,8 @@ void	Server::parsingData(int fd) {
 		}
 		else {
 			user = this->searchClient(fd);
-			if (!user) {
-				std::cout <<"unregistered user fd: "<<fd << std::endl;
+			if (!user)
 				return;
-			}
 			if (tokenizer[0] == "JOIN") {commandJoin(tokenizer, user, fd);}
 			else if (tokenizer[0] == "PING") {commandPing(tokenizer, user, fd);}
 			else if (tokenizer[0] == "PART") {commandPart(tokenizer, user, fd);}
@@ -245,9 +225,8 @@ void	Server::deleteChannel(Channel **channel) {
 
 Channel	*Server::searchChannel(std::string channel_name) {
 	std::map<std::string, Channel *>::iterator iter = _channel_list.find(channel_name);
-	if (iter != _channel_list.end()) {
+	if (iter != _channel_list.end())
 		return iter->second;
-	}
 	return NULL;
 }
 
@@ -257,34 +236,28 @@ void	Server::sendMessage(std::string message, int fd) {
 }
 
 void Server::broadcastChannelMessage(std::string message, Channel *ch) {
-	std::cout <<"broadcasting " << std::endl;
 	if (!ch || ch->getUserCount() <= 0)
 		return ;
 	for (std::map<int, Client *>::const_iterator iter = ch->getUserList().begin();
-		iter != ch->getUserList().end(); ++iter) {
+		iter != ch->getUserList().end(); ++iter)
 		sendMessage(message, iter->second->getSocketFd());
-	}
 }
 
 void Server::broadcastChannelMessage(std::string message, Channel *ch, int socket_fd) {
-	std::cout <<"broadcasting except " << socket_fd << std::endl;
 	if (!ch || ch->getUserCount() <= 0)
 		return ;
 	for (std::map<int, Client *>::const_iterator iter = ch->getUserList().begin();
 		iter != ch->getUserList().end(); ++iter) {
-		if (iter->first != socket_fd) {
-			std::cout <<  iter->first << "except " << socket_fd << std::endl;
+		if (iter->first != socket_fd)
 			sendMessage(message, iter->second->getSocketFd());
-		}
 	}
 }
 
 Client	*Server::searchClient(std::string nickname) {
 	for (std::map<int, Client *>::iterator iter = this->_user_list.begin();
-		iter != _user_list.end(); iter++) {
+		iter != _user_list.end(); iter++)
 		if (iter->second->getNickname() == nickname)
 			return iter->second;
-	}
 	return NULL;
 }
 

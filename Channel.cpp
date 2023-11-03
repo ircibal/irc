@@ -162,11 +162,8 @@ std::vector<std::string>	Channel::setChannelMode(std::vector<std::string> token,
 			}
 			else {
 				if (_mode.find(token[2][1]) == _mode.end()) {
-					if (token.size() >= 4) {
-						std::cout << "token[2]: " << token[2] << std::endl;
-						std::cout << "token[3]: " << token[3] << std::endl;
+					if (token.size() >= 4)
 						throw ChannelModeException(ERR_UNKNOWNMODE(client->getNickname(), token[3][1]));
-					}
 					return mode_params;
 				}
 				_mode.erase(token[2][1]);
@@ -281,7 +278,6 @@ bool	Channel::removeChannelUser(Client *client) {  //유저 목록에서 지우�
 	Client *user = findChannelUser(client);
 	if (user) {
 		_user_list.erase(client->getSocketFd());
-		std::cout << client->getNickname() << "is parted from channel "<< _name << std::endl;
 		return true;
 	}
 	return false;

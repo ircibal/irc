@@ -38,7 +38,6 @@ void	Server::commandJoin(std::vector<std::string> token, Client * user, int fd) 
 	Channel *ch = this->searchChannel(channel_name);
 	// ------------------------------------------------------success::new channel
 	if (!ch) {
-		std::cout << "new channel made : " << token[1] << std::endl;
 		ch = makeChannel(token[1], user);
 		this->sendMessage(RPL_JOIN(user->getPrefix(), channel_name),fd);
 		if (ch->getChannelTopic() != "")
@@ -64,7 +63,6 @@ void	Server::commandJoin(std::vector<std::string> token, Client * user, int fd) 
 	// Success:: exist channel
 	else {
 		ch->addChannelUser(user);
-		std::cout << "exist channel enter : " << token[1] <<"\nthis channel now has " << ch->getUserCount() << std::endl;
 		this->sendMessage(RPL_JOIN(user->getPrefix(), channel_name),fd);
 		this->broadcastChannelMessage(RPL_JOIN(user->getPrefix(), channel_name), ch, fd);
 		if (ch->getChannelTopic() != "")
@@ -218,7 +216,6 @@ void	Server::commandPart(std::vector<std::string> token, Client * user, int fd) 
 void	Server::commandPrivmsg(std::vector<std::string> token, Client * user, int fd) {
 	if (token.size() != 3 ) {
 		sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-		std::cout << "privmsg error from " << user->getNickname() << std::endl;
 		return;
 	}
 	Channel *ch = searchChannel(token[1]);
@@ -336,8 +333,8 @@ void	Server::commandTopic(std::vector<std::string> token, Client * user, int fd)
 			return ;
 		}
 		else {
-				ch->setChannelTopic(topic);
-				broadcastChannelMessage(RPL_MY_TOPIC(user->getPrefix(), ch->getChannelName(), ch->getChannelTopic()), ch);
+			ch->setChannelTopic(topic);
+			broadcastChannelMessage(RPL_MY_TOPIC(user->getPrefix(), ch->getChannelName(), ch->getChannelTopic()), ch);
 		}
 	}
 }
