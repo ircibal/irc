@@ -339,34 +339,49 @@ void	Server::commandTopic(std::vector<std::string> token, Client * user, int fd)
 	}
 }
 
-// 에러 어떤 케이스인지 모르겠음...
 void	Server::commandQuit(std::vector<std::string> token, Client * user, int fd) {
 	std::string msg = getTotalMessage(1, token);
 	Channel	*ch = NULL;
-	for (std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
-		iter != _channel_list.end(); iter++) {
-			if (ch != NULL) {
-				removeChannelList(ch->getChannelName());
-				deleteChannel(&ch);
-			}
-			ch = iter->second;
-			if (ch->isChannelUser(user) == true) {
-				broadcastChannelMessage(RPL_QUIT(user->getPrefix(), msg), ch, fd);
-				sendMessage(RPL_PART(user->getPrefix(), ch->getChannelName()), fd);
-				if(ch->isChannelOperator(user) == true)
-					ch->removeChannelOperator(user);
-				ch->removeChannelUser(user);
-			}
-			if (ch->getUserCount() == 0) {
-				std::map<std::string, Channel *>::iterator tmp = iter;
-				if (++tmp == _channel_list.end()) {
-					removeChannelList(ch->getChannelName());
-					deleteChannel(&ch);
-					break ;
-				}
-				continue;
-			}
-			ch = NULL;
+	// for (std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
+	// 	iter != _channel_list.end(); iter++) {
+	// 		if (ch != NULL) {
+	// 			removeChannelList(ch->getChannelName());
+	// 			deleteChannel(&ch);
+	// 		}
+	// 		ch = iter->second;
+	// 		if (ch->isChannelUser(user) == true) {
+	// 			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), msg), ch, fd);
+	// 			sendMessage(RPL_PART(user->getPrefix(), ch->getChannelName()), fd);
+	// 			if(ch->isChannelOperator(user) == true)
+	// 				ch->removeChannelOperator(user);
+	// 			ch->removeChannelUser(user);
+	// 		}
+	// 		if (ch->getUserCount() == 0) {
+	// 			std::map<std::string, Channel *>::iterator tmp = iter;
+	// 			if (++tmp == _channel_list.end()) {
+	// 				removeChannelList(ch->getChannelName());
+	// 				deleteChannel(&ch);
+	// 				break ;
+	// 			}
+	// 			continue;
+	// 		}
+	// 		ch = NULL;
+	// 	}
+	std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
+	while (iter != _channel_list.end()) {
+		ch = iter->second;
+		++iter;
+		if (ch->isChannelUser(user) == true) {
+			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), msg), ch, fd);
+			sendMessage(RPL_PART(user->getPrefix(), ch->getChannelName()), fd);
+			if(ch->isChannelOperator(user) == true)
+				ch->removeChannelOperator(user);
+			ch->removeChannelUser(user);
 		}
+		if (ch->getUserCount() == 0){
+			removeChannelList(ch->getChannelName());
+			deleteChannel(&ch);
+		}
+	}
 	disconnectClient(fd);
 }

@@ -96,7 +96,7 @@ void	Server::serverInit(char **argv) {
 					if (n <= 0)
 						disconnectClient(_curr_event->ident);
 					else {
-						std::map<int, std::string>::iterator it = _clients.find(_curr_event->ident);
+						// std::map<int, std::string>::iterator it = _clients.find(_curr_event->ident);
 						buf[n] = '\0';
 						_clients[_curr_event->ident] += buf;
 						parsingData(_curr_event->ident);
@@ -177,7 +177,7 @@ void	Server::parsingData(int fd) {
 			if (user && this->getAuth(user) == true) {
 				this->_temp_list.erase(fd);
 				this->addUserList(fd, user);
-				std::cout<< RPL_WELCOME(user->getNickname()) << std::endl;
+				// std::cout<< RPL_WELCOME(user->getNickname()) << std::endl;
 				this->sendMessage(RPL_WELCOME(user->getNickname()), fd);
 			}
 		}
