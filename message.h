@@ -12,6 +12,7 @@
 # define ERR_INVITEONLYCHAN(user, channel) "473 " + user + " " + channel + " :Cannot join channel (+i)" + "\r\n"
 # define ERR_BANNEDFROMCHAN(user, channel) "474 " + user + " " + channel + " :Cannot join channel (+b)" + "\r\n"
 # define ERR_BADCHANNELKEY(user, channel) "475 " + user + " " + channel + " :Cannot join channel (+k)" + "\r\n"
+# define ERR_INVALIDCHANNEL(user_nick, channel) "476 " + user_nick + " " + channel + " :Invalid channel name" + "\r\n"
 # define ERR_QUIT(user, message) "ERROR :Closing link: (" + user + ") [Quit: " + message + "]" + "\r\n"
 # define ERR_NOSUCHSERVER(user, server) "402 " + user + " " + server + " :No such server" + "\r\n"
 # define ERR_NOSUCHCHANNEL(user_nick, channel) "403 " + user_nick + " " + channel + " :No such channel" + "\r\n"

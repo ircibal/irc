@@ -34,6 +34,8 @@ void	Server::commandJoin(std::vector<std::string> token, Client *user, int fd) {
 	// error::no channel name
 	if (paramcnt < 1)
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), "JOIN"), fd);
+	if (channel_name[0] != '#')
+		return sendMessage(ERR_INVALIDCHANNEL(user->getNickname(), channel_name), fd);
 	Channel *ch = searchChannel(channel_name);
 	// ------------------------------------------------------success::new channel
 	if (!ch) {
