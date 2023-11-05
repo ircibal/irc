@@ -1,7 +1,6 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "util.h"
-#include <cstdio>
 
 Channel::Channel(const std::string& name, Client *client) :_name(name) {
 	this->initialize();
