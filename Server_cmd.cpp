@@ -374,7 +374,7 @@ void	Server::commandQuit(std::vector<std::string> token, Client * user, int fd) 
 		++iter;
 		if (ch->isChannelUser(user) == true) {
 			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), msg), ch, fd);
-			sendMessage(RPL_PART(user->getPrefix(), ch->getChannelName()), fd);
+			// sendMessage(RPL_PART(user->getPrefix(), ch->getChannelName()), fd);
 			if(ch->isChannelOperator(user) == true)
 				ch->removeChannelOperator(user);
 			ch->removeChannelUser(user);
