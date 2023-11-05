@@ -5,7 +5,7 @@
 # define ERR_NONICKNAMEGIVEN(user) "431 " + user + " :Nickname not given" + "\r\n"
 # define ERR_NICKNAMEINUSE(user) "433 " + user + " " + user + " :Nickname is already in use" + "\r\n"
 # define ERR_NEEDMOREPARAMS(source, command) "461 " + source + " " + command + " :Not enough parameters" + "\r\n"
-# define ERR_ALREADYREGISTRED(source) "462 " + source + " :You may not register" + "\r\n"
+# define ERR_ALREADYREGISTERED(source) "462 " + source + " :You may not register" + "\r\n"
 # define ERR_PASSWDMISMATCH(user) "464 " + user + " :Password incorrect" + "\r\n"
 # define ERR_NOORIGIN(user) "465 " + user + " :No origin specified" + "\r\n"
 # define ERR_CHANNELISFULL(user, channel) "471 " + user + " " + channel + " :Cannot join channel (+1)" + "\r\n"
@@ -56,7 +56,4 @@
 # define RPL_MODE(user_pfx, channel, modes, params) ":" + user_pfx + " MODE " + channel + " " + modes + params + "\r\n"
 # define RPL_NICK(before, after) ":" + before + " NICK :" + after + "\r\n"
 
-
-
-#define ERR_ALREADYREGISTERED(client) client + " :You may not reregister\r\n"
 #endif  // MESSAGE_H

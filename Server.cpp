@@ -177,14 +177,13 @@ void	Server::parsingData(int fd) {
 			if (user && this->getAuth(user) == true) {
 				this->_temp_list.erase(fd);
 				this->addUserList(fd, user);
-				// std::cout<< RPL_WELCOME(user->getNickname()) << std::endl;
 				this->sendMessage(RPL_WELCOME(user->getNickname()), fd);
 			}
 		}
 		else {
 			user = this->searchClient(fd);
 			if (!user)
-				return;
+				return ;
 			if (tokenizer[0] == "JOIN") {commandJoin(tokenizer, user, fd);}
 			else if (tokenizer[0] == "PING") {commandPing(tokenizer, user, fd);}
 			else if (tokenizer[0] == "PART") {commandPart(tokenizer, user, fd);}

@@ -2,20 +2,20 @@
 #include "Channel.hpp"
 
 Client::Client() : _pass(false) {
-	this->_nickname = "";
-	this->_hostname = "";
-	this->_username = "";
-	this->_socket_fd = -1;
-	this->_realname = "";
+	_nickname = "";
+	_hostname = "";
+	_username = "";
+	_socket_fd = -1;
+	_realname = "";
 	_channel_list = std::map<std::string, Channel *>();
 	_channel_limit = CLIENT_CHANNEL_LIMIT;
 }
 
 Client::Client(int socket_fd) : _socket_fd(socket_fd), _pass(false) {
-	this->_nickname = "";
-	this->_hostname = "";
-	this->_username = "";
-	this->_realname = "";
+	_nickname = "";
+	_hostname = "";
+	_username = "";
+	_realname = "";
 	_channel_limit = CLIENT_CHANNEL_LIMIT;
 	_channel_list = std::map<std::string, Channel *>();
 }
@@ -69,10 +69,10 @@ void	Client::addChannelList(Channel *channel) {
 }
 
 int	Client::checkChannelLimit() const{
-	int cnt = this->_channel_list.size();
-	if (cnt < this->_channel_limit)
-		return (0);
-	return (-1);
+	int cnt = _channel_list.size();
+	if (cnt < _channel_limit)
+		return 0;
+	return -1;
 }
 
 void	Client::removeChannelList(Channel *channel) { _channel_list.erase(channel->getChannelName()); }

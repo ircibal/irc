@@ -3,9 +3,9 @@
 #include "util.h"
 
 Channel::Channel(const std::string& name, Client *client) :_name(name) {
-	this->initialize();
-	this->addChannelUser(client);
-	this->addChannelOperator(client);
+	initialize();
+	addChannelUser(client);
+	addChannelOperator(client);
 }
 
 Channel::~Channel() {}
@@ -42,7 +42,7 @@ const std::string Channel::getUserNameList() {
 	std::string res;
 	for (std::map <int, Client *> ::iterator iter = _user_list.begin();
 	iter != _user_list.end(); iter++) {
-		if (isChannelOperator(iter->second) == true)
+		if (isChannelOperator(iter->second))
 			res += "@";
 		res += iter->second->getNickname();
 		res += " ";
@@ -66,7 +66,7 @@ std::vector<std::string>	Channel::setChannelMode(std::vector<std::string> token,
 	int switch_mode = 0;
 	if (token[2][0] == '-')
 		switch_mode = 1;
-	if (isChannelOperator(client) == false)  // without permission
+	if (!isChannelOperator(client))  // without permission
 		throw ChannelModeException(ERR_CHANOPRIVSNEEDEDMODE(client->getNickname(), getChannelName(), token[2][1]));
 	if (token[2][1] == 'i' || token[2][1] == 't') {
 		if (switch_mode == 0) {
@@ -92,7 +92,7 @@ std::vector<std::string>	Channel::setChannelMode(std::vector<std::string> token,
 				if (token.size() < 4)
 					throw ChannelModeException(ERR_NOOPPARAM(client->getNickname(), _name, token[2][1], "op", "nick"));
 				Client *new_operator = findChannelUser(token[3]);
-				if (new_operator == NULL)
+				if (!new_operator)
 					throw ChannelModeException(ERR_NOSUCHNICK(client->getNickname(), token[3]));
 				if (addChannelOperator(new_operator)) {
 					mode_params.push_back(token[2]);
@@ -135,7 +135,7 @@ std::vector<std::string>	Channel::setChannelMode(std::vector<std::string> token,
 				if (token.size() < 4)
 					throw ChannelModeException(ERR_NOOPPARAM(client->getNickname(), _name, token[2][1], "op", "nick"));
 				Client *old_operator = findChannelUser(token[3]);
-				if (old_operator == NULL)
+				if (!old_operator)
 					throw ChannelModeException(ERR_NOSUCHNICK(client->getNickname(), token[3]));
 				if (removeChannelOperator(old_operator)) {
 					mode_params.push_back(token[2]);
@@ -218,7 +218,7 @@ Client	*Channel::findChannelOperator(std::string nickname) {
 }
 
 bool	Channel::addChannelOperator(Client *new_operator) {
-	if (isChannelOperator(new_operator) == false) {
+	if (!isChannelOperator(new_operator)) {
 		_operator.insert(std::make_pair(new_operator->getSocketFd(), new_operator));
 		return true;
 	}
@@ -226,7 +226,7 @@ bool	Channel::addChannelOperator(Client *new_operator) {
 }
 
 bool	Channel::removeChannelOperator(Client *old_operator) {
-	if (isChannelOperator(old_operator) == true) {
+	if (isChannelOperator(old_operator)) {
 		_operator.erase(old_operator->getSocketFd());
 		return true;
 	}
@@ -299,7 +299,7 @@ Client	*Channel::findInvitedUser(std::string nickname) {
 
 // 채널에 유저 초대
 bool	Channel::addInvitedUser(Client *client) {
-	if (isChannelUser(client) == false && isInvitedUser(client) == false) {
+	if (!isChannelUser(client) && !isInvitedUser(client)) {
 		_invite_list.insert(std::make_pair(client->getSocketFd(), client));
 		return true;
 	}
@@ -307,7 +307,7 @@ bool	Channel::addInvitedUser(Client *client) {
 }
 
 bool	Channel::removeInvitedUser(Client *client){  //채널에 초대된 유저 지우기
-	if (isInvitedUser(client) == true) {
+	if (isInvitedUser(client)) {
 		_invite_list.erase(client->getSocketFd());
 		return true;
 	}
@@ -317,13 +317,13 @@ bool	Channel::removeInvitedUser(Client *client){  //채널에 초대된 유저 �
 void	Channel::clearInviteList() { _invite_list.clear(); }
 
 int	Channel::checkUserLimit() {
-	if (_user_list.size() < this->_user_limit)
+	if (_user_list.size() < _user_limit)
 		return 0;
 	return -1;
 }
 
 int	Channel::checkInvite(Client *client) {
-	if (isInvitedUser(client) == true)
+	if (isInvitedUser(client))
 		return 0;
 	return -1;
 }
