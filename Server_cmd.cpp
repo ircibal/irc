@@ -207,6 +207,7 @@ void	Server::commandPart(std::vector<std::string> token, Client * user, int fd) 
 	}
 	ch->removeChannelUser(user);
 	if (ch->getUserCount() == 0) {
+		removeChannelList(ch->getChannelName());
 		deleteChannel(&ch);
 	}
 	sendMessage(RPL_PART(user->getPrefix(), token[1]), fd);
