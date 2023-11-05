@@ -297,7 +297,6 @@ void	Server::commandKick(std::vector<std::string> token, Client * user, int fd) 
 		ch->removeChannelUser(kickUser);
 		if (ch->getUserCount() == 0) {
 			removeChannelList(ch->getChannelName());
-			// ---------- 세그폴트 테스트 필요
 			deleteChannel(&ch);
 		}
 	}
@@ -374,7 +373,6 @@ void	Server::commandQuit(std::vector<std::string> token, Client * user, int fd) 
 		++iter;
 		if (ch->isChannelUser(user) == true) {
 			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), msg), ch, fd);
-			// sendMessage(RPL_PART(user->getPrefix(), ch->getChannelName()), fd);
 			if(ch->isChannelOperator(user) == true)
 				ch->removeChannelOperator(user);
 			ch->removeChannelUser(user);
