@@ -202,13 +202,6 @@ void	Server::commandPart(std::vector<std::string> token, Client *user, int fd) {
 	broadcastChannelMessage(RPL_PART(user->getPrefix(), token[1]), ch);
 }
 
-static void	printToken(std::vector<std::string> token) {
-	for (unsigned int i = 0; i < token.size(); i++) {
-		std::cout << "token[" << i << "]: " << token[i] << std::endl;
-	}
-	std::cout << std::endl;
-}
-
 static std::vector<std::string> splitString(const std::string &str, char delim) {
 	std::vector<std::string> tokens;
 	std::string token;
@@ -220,15 +213,11 @@ static std::vector<std::string> splitString(const std::string &str, char delim) 
 }
 
 void	Server::commandPrivmsg(std::vector<std::string> token, Client *user, int fd) {
-	printToken(token);  // test
 	if (token.size() < 3 )
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
 	std::string message = getTotalMessage(2, token);
-	std::vector<std::string> target = splitString(token[1], ',');
-	// irssi 기준으로는 각 타겟이 별도의 commandPrivate의 토큰으로 분리되어 전달됨
-	// nc는 테스트 해보지 못했음. 따라서 ,로 구분되어 전달되는지(반복문 유지) irssi처럼 들어오는지(반복문 및 splitString 삭제) 확인이 필요함
+	std::vector<std::string>target = splitString(token[1], ',');
 	for (unsigned int i = 0; i < target.size(); i++) {
-		std::cout << "Test i = " << i << std::endl;  // test
 		if (target[i][0] == '#') {
 			Channel *channel = searchChannel(target[i]);
 			if (!channel)
@@ -241,7 +230,7 @@ void	Server::commandPrivmsg(std::vector<std::string> token, Client *user, int fd
 			Client *target_user = searchClient(target[i]);
 			if (!target_user)
 				return sendMessage(ERR_NOSUCHNICK(user->getNickname(), target[i]), fd);
-			return sendMessage(RPL_PRIVMSG(user->getPrefix(), target[i], message), target_user->getSocketFd());
+			sendMessage(RPL_PRIVMSG(user->getPrefix(), target[i], message), target_user->getSocketFd());
 		}
 	}
 }
