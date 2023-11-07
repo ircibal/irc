@@ -1,8 +1,8 @@
 #include "Server.hpp"
 #include "message.h"
 
+// irssi -c 10.19.219.173 -p 8080 -w 1234 -n yeongo
 // 10.18.225.179
-// irssi -c 10.12.1.3 -p 8080 -w 1234 -n yeongo
 // docker run -d --name ubuntu -p 80:80 -it --privileged ubuntu:20.04
 // 서버네임 숫자 닉네임 메세지
 
@@ -131,19 +131,6 @@ void	Server::changeEvents(std::vector<struct kevent>& change_list, uintptr_t ide
 
 void	Server::disconnectClient(int client_fd) {
 	close(client_fd);
-	this->_clients.erase(client_fd);
-	std::map<int, Client *>::iterator it;
-	it = this->_temp_list.find(client_fd);
-	if (it != this->_temp_list.end()) {  //temp list에 있는 fd
-		delete it->second;
-		this->_temp_list.erase(client_fd);
-		return ;
-	}
-	it = this->_user_list.find(client_fd);
-	if (it != this->_user_list.end()) {  //user list에 있는 fd
-		delete it->second;
-		this->_user_list.erase(client_fd);
-	}
 	Client *user = searchClient(client_fd);
 	std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
 	while (iter != _channel_list.end()) {
@@ -159,6 +146,19 @@ void	Server::disconnectClient(int client_fd) {
 			removeChannelList(ch->getChannelName());
 			deleteChannel(&ch);
 		}
+	}
+	this->_clients.erase(client_fd);
+	std::map<int, Client *>::iterator it;
+	it = this->_temp_list.find(client_fd);
+	if (it != this->_temp_list.end()) {  //temp list에 있는 fd
+		delete it->second;
+		this->_temp_list.erase(client_fd);
+		return ;
+	}
+	it = this->_user_list.find(client_fd);
+	if (it != this->_user_list.end()) {  //user list에 있는 fd
+		delete it->second;
+		this->_user_list.erase(client_fd);
 	}
 }
 
