@@ -104,7 +104,8 @@ void	Server::commandUser(std::vector<std::string> token, int fd) {
 void	Server::commandPass(std::vector<std::string> token, int fd) {
 	Client *user = NULL;
 	std::map<int, Client *>::iterator iter = _temp_list.find(fd);
-	if(searchClient(fd) != NULL)
+	user = searchClient(fd);
+	if(user != NULL)
 		sendMessage(ERR_ALREADYREGISTERED(user->getNickname()), fd);
 	else if (token.size() != 2)
 		sendMessage(ERR_NEEDMOREPARAMS((std::string)"root", (std::string)"PASS"), fd);
