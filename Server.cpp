@@ -2,7 +2,7 @@
 #include "message.h"
 
 // 10.18.225.179
-// irssi -c 10.12.8.4 -p 8080 -w 1234 -n yeongo
+// irssi -c 10.12.1.3 -p 8080 -w 1234 -n yeongo
 // docker run -d --name ubuntu -p 80:80 -it --privileged ubuntu:20.04
 // 서버네임 숫자 닉네임 메세지
 
@@ -143,6 +143,22 @@ void	Server::disconnectClient(int client_fd) {
 	if (it != this->_user_list.end()) {  //user list에 있는 fd
 		delete it->second;
 		this->_user_list.erase(client_fd);
+	}
+	Client *user = searchClient(client_fd);
+	std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
+	while (iter != _channel_list.end()) {
+		Channel *ch = iter->second;
+		++iter;
+		if (ch->isChannelUser(user) == true) {
+			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), "disconnected client"), ch, client_fd);
+			if(ch->isChannelOperator(user) == true)
+				ch->removeChannelOperator(user);
+			ch->removeChannelUser(user);
+		}
+		if (ch->getUserCount() == 0){
+			removeChannelList(ch->getChannelName());
+			deleteChannel(&ch);
+		}
 	}
 }
 
