@@ -122,24 +122,28 @@ void	Server::commandPass(std::vector<std::string> token, int fd) {
 }
 
 void	Server::commandNick(std::vector<std::string> token, int fd) {
-	Client *user = NULL;
-	if (token.size() != 2)
-		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), (std::string)"NICK"), fd);
-	if (searchClient(token[1]))
-		return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
-	user = searchClient(fd);
-	if (user != NULL) {
-		sendMessage(RPL_NICK(user->getPrefix(), token[1]), fd);
-		user->setNickname(token[1]);
-		return ;
+	Client *user = searchClient(fd);
+	if (user == NULL) {
+		if (token.size() != 2)
+			return sendMessage(ERR_NEEDMOREPARAMS((std::string)"", "NICK"), fd);
+		if (searchClient(token[1]))
+			return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
+		user = searchTemp(fd);
+		if (user != NULL)
+			user->setNickname(token[1]);
+		else {
+			user = new Client(fd);
+			user->setNickname(token[1]);
+			_temp_list.insert(std::make_pair(fd, user));
+		}
 	}
-	user = searchTemp(fd);
-	if (user != NULL)
-		user->setNickname(token[1]);
 	else {
-		user = new Client(fd);
+		if (token.size() != 2)
+			return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), "NICK"), fd);
+		if (searchClient(token[1]))
+			return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
 		user->setNickname(token[1]);
-		_temp_list.insert(std::make_pair(fd, user));
+		sendMessage(RPL_NICK(user->getPrefix(), token[1]), fd);
 	}
 }
 
