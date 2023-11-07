@@ -124,15 +124,23 @@ void	Server::commandPass(std::vector<std::string> token, int fd) {
 
 void	Server::commandNick(std::vector<std::string> token, int fd) {
 	Client *user = NULL;
-	if (token.size() >= 2 && (user = searchClient(token[1])) != NULL)
-		return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
+	user = searchClient(fd);
+	if (user == NULL) {
+		// 새로 접속
+		if (token.size() < 2) {
+			return sendMessage(ERR_NEEDMOREPARAMS("", "NICK"), fd);
+		}
+	}
+	else {
+		// 닉네임 변경
+	}
+	
 	if (token.size() != 2) {
 		std::string nickname = "";
 		if (user != NULL)
 			nickname = user->getNickname();
 		return sendMessage(ERR_NEEDMOREPARAMS(nickname, "NICK"), fd);
 	}
-	user = searchClient(fd);
 	if (user != NULL) {
 		sendMessage(RPL_NICK(user->getPrefix(), token[1]), fd);
 		user->setNickname(token[1]);
