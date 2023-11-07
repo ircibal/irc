@@ -26,20 +26,24 @@ static std::string getTotalMessage(size_t start, std::vector<std::string> token)
 
 void	Server::commandJoin(std::vector<std::string> token, Client *user, int fd) {
 	std::string password = "";
-	std::string& channel_name = token[1];
+	std::string channel_name = token[1];
 	const int paramcnt = token.size();
 
-	if (paramcnt >= 2)
+	if (paramcnt >= 2){
 		password = token[2];
+		//nc에서 채널이름 #안붙이고 들어올 경우
+		if (token[1][0] != '#')
+			channel_name = "#" + token[1];
+	}
 	// error::no channel name
 	if (paramcnt < 1)
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), "JOIN"), fd);
-	if (channel_name[0] != '#')
-		return sendMessage(ERR_INVALIDCHANNEL(user->getNickname(), channel_name), fd);
+	// if (channel_name[0] != '#')
+	// 	return sendMessage(ERR_INVALIDCHANNEL(user->getNickname(), channel_name), fd);
 	Channel *ch = searchChannel(channel_name);
 	// ------------------------------------------------------success::new channel
 	if (!ch) {
-		ch = makeChannel(token[1], user);
+		ch = makeChannel(channel_name , user);
 		sendMessage(RPL_JOIN(user->getPrefix(), channel_name),fd);
 		if (ch->getChannelTopic() != "")
 			sendMessage(RPL_TOPIC(user->getPrefix(), channel_name, ch->getChannelTopic()), fd);
@@ -49,7 +53,7 @@ void	Server::commandJoin(std::vector<std::string> token, Client *user, int fd) {
 		return ;
 	}
 	// ------------------------------------------------------exist channel
-	if (ch->isChannelUser(user))
+	if (ch->isChannelUser(user) == true)
 		return ;
 	// ------------------------------------------------------error::client exceed max channel cnt
 	else if (user->checkChannelLimit() == -1)
@@ -186,6 +190,9 @@ void	Server::commandPart(std::vector<std::string> token, Client *user, int fd) {
 		msg = getTotalMessage(2, token);
 	if (!ch->isChannelUser(user))
 		return sendMessage(ERR_NOTONCHANNEL(user->getNickname(), token[1]), fd);
+	if (ch->isChannelOperator(user) == true){
+		ch->removeChannelOperator(user);
+	}
 	ch->removeChannelUser(user);
 	if (ch->getUserCount() == 0) {
 		removeChannelList(ch->getChannelName());
