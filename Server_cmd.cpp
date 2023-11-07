@@ -104,7 +104,8 @@ void	Server::commandUser(std::vector<std::string> token, int fd) {
 void	Server::commandPass(std::vector<std::string> token, int fd) {
 	Client *user = NULL;
 	std::map<int, Client *>::iterator iter = _temp_list.find(fd);
-	if(searchClient(fd) != NULL)
+	user = searchClient(fd);
+	if(user != NULL)
 		sendMessage(ERR_ALREADYREGISTERED(user->getNickname()), fd);
 	else if (token.size() != 2)
 		sendMessage(ERR_NEEDMOREPARAMS((std::string)"root", (std::string)"PASS"), fd);
@@ -123,10 +124,14 @@ void	Server::commandPass(std::vector<std::string> token, int fd) {
 
 void	Server::commandNick(std::vector<std::string> token, int fd) {
 	Client *user = NULL;
-	if (token.size() != 2)
-		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), (std::string)"NICK"), fd);
-	if (searchClient(token[1]))
+	if (token.size() >= 2 && (user = searchClient(token[1])) != NULL)
 		return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
+	if (token.size() != 2) {
+		std::string nickname = "";
+		if (user != NULL)
+			nickname = user->getNickname();
+		return sendMessage(ERR_NEEDMOREPARAMS(nickname, "NICK"), fd);
+	}
 	user = searchClient(fd);
 	if (user != NULL) {
 		sendMessage(RPL_NICK(user->getPrefix(), token[1]), fd);
