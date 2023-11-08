@@ -23,6 +23,7 @@
 # define ERR_USERNOTINCHANNEL(user, nick, channel) "441 " + user + " " + nick + " " + channel + " :They are not on that channel" + "\r\n"
 # define ERR_NOTONCHANNEL(user, channel) "442 " + user + " " + channel + " :You're not on that channel!" + "\r\n"
 # define ERR_CANNOTSENDTOCHAN(user, channel) "404 " + user + " " + channel + " :Cannot send to channel (no external messages)" + "\r\n"
+# define ERR_NOTEXTTOSEND(user_nick) "412 " + user_nick +  " :No text to send" + "\r\n"
 # define ERR_NOSUCHNICK(user_nick, nick) "401 " + user_nick + " " + nick + " :No such nick" + "\r\n"
 # define ERR_UNKNOWNMODE(user_nick, mode) "472 " + user_nick + " " + mode + " :is an unknown mode character" + "\r\n"
 # define ERR_NOOPPARAM(user_nick, channel, mode, modename, param) "696 " + user_nick + " " + channel + " " + mode + " * :You must specify a parameter for the " + modename + " mode. Syntax: <" + param + ">." + "\r\n"
@@ -46,11 +47,10 @@
 # define RPL_ENDOFBANLIST(user, channel) "368 " + user + " " + channel + " :End of channel ban list" + "\r\n"
 // command
 // origin
-// # define RPL_QUIT(user, message) ":" + user + " QUIT :Quit: " + message + "\r\n"
 # define RPL_QUIT(user, message) ":" + user + " QUIT :" + message + "\r\n"
 # define RPL_PONG(user, ping) ":" + user + " PONG :" + ping + "\r\n"
 # define RPL_JOIN(user, channel) ":" + user + " JOIN :" + channel + "\r\n"
-# define RPL_PRIVMSG(user, target, msg) ":" + user + " PRIVMSG " + target + " " + msg + "\r\n"
+# define RPL_PRIVMSG(user, target, message) ":" + user + " PRIVMSG " + target + " :" + message + "\r\n"
 # define RPL_MY_TOPIC(user, channel, topic) ":" + user + " TOPIC " + channel + " :" + topic + "\r\n"
 # define RPL_PART(user, channel) ":" + user + " PART "+ channel + "\r\n"
 # define RPL_KICK(user, channel, nick, message) ":" + user + " KICK " + channel + " " + nick + " :" + message+ "\r\n"

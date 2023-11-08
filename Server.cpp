@@ -96,7 +96,6 @@ void	Server::serverInit(char **argv) {
 					if (n <= 0)
 						disconnectClient(_curr_event->ident);
 					else {
-						// std::map<int, std::string>::iterator it = _clients.find(_curr_event->ident);
 						buf[n] = '\0';
 						_clients[_curr_event->ident] += buf;
 						parsingData(_curr_event->ident);
@@ -134,17 +133,17 @@ void	Server::disconnectClient(int client_fd) {
 	Client *user = searchClient(client_fd);
 	std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
 	while (iter != _channel_list.end()) {
-		Channel *ch = iter->second;
+		Channel *channel = iter->second;
 		++iter;
-		if (ch->isChannelUser(user) == true) {
-			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), "disconnected client"), ch, client_fd);
-			if(ch->isChannelOperator(user) == true)
-				ch->removeChannelOperator(user);
-			ch->removeChannelUser(user);
+		if (channel->isChannelUser(user)) {
+			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), "disconnected client"), channel, client_fd);
+			if(channel->isChannelOperator(user))
+				channel->removeChannelOperator(user);
+			channel->removeChannelUser(user);
 		}
-		if (ch->getUserCount() == 0){
-			removeChannelList(ch->getChannelName());
-			deleteChannel(&ch);
+		if (channel->getUserCount() == 0) {
+			removeChannelList(channel->getChannelName());
+			deleteChannel(&channel);
 		}
 	}
 	this->_clients.erase(client_fd);
@@ -250,19 +249,19 @@ void	Server::sendMessage(std::string message, int fd) {
 	_send_data[fd] += message;
 }
 
-void Server::broadcastChannelMessage(std::string message, Channel *ch) {
-	if (!ch || ch->getUserCount() <= 0)
+void Server::broadcastChannelMessage(std::string message, Channel *channel) {
+	if (!channel || channel->getUserCount() <= 0)
 		return ;
-	for (std::map<int, Client *>::const_iterator iter = ch->getUserList().begin();
-		iter != ch->getUserList().end(); ++iter)
+	for (std::map<int, Client *>::const_iterator iter = channel->getUserList().begin();
+		iter != channel->getUserList().end(); ++iter)
 		sendMessage(message, iter->second->getSocketFd());
 }
 
-void Server::broadcastChannelMessage(std::string message, Channel *ch, int socket_fd) {
-	if (!ch || ch->getUserCount() <= 0)
+void Server::broadcastChannelMessage(std::string message, Channel *channel, int socket_fd) {
+	if (!channel || channel->getUserCount() <= 0)
 		return ;
-	for (std::map<int, Client *>::const_iterator iter = ch->getUserList().begin();
-		iter != ch->getUserList().end(); ++iter) {
+	for (std::map<int, Client *>::const_iterator iter = channel->getUserList().begin();
+		iter != channel->getUserList().end(); ++iter) {
 		if (iter->first != socket_fd)
 			sendMessage(message, iter->second->getSocketFd());
 	}

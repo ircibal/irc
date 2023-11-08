@@ -41,7 +41,7 @@ void	Server::commandJoin(std::vector<std::string> token, Client *user, int fd) {
 	std::string channel_name = token[1];
 	const int paramcnt = token.size();
 
-	if (paramcnt >= 2){
+	if (paramcnt >= 2) {
 		password = token[2];
 		//nc에서 채널이름 #안붙이고 들어올 경우
 		if (token[1][0] != '#')
@@ -50,42 +50,40 @@ void	Server::commandJoin(std::vector<std::string> token, Client *user, int fd) {
 	// error::no channel name
 	if (paramcnt < 1)
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), "JOIN"), fd);
-	// if (channel_name[0] != '#')
-	// 	return sendMessage(ERR_INVALIDCHANNEL(user->getNickname(), channel_name), fd);
-	Channel *ch = searchChannel(channel_name);
+	Channel *channel = searchChannel(channel_name);
 	// ------------------------------------------------------success::new channel
-	if (!ch) {
-		ch = makeChannel(channel_name , user);
+	if (!channel) {
+		channel = makeChannel(channel_name , user);
 		sendMessage(RPL_JOIN(user->getPrefix(), channel_name),fd);
-		if (ch->getChannelTopic() != "")
-			sendMessage(RPL_TOPIC(user->getPrefix(), channel_name, ch->getChannelTopic()), fd);
-		ch->addChannelOperator(user);
-		sendMessage(RPL_NAMREPLY(user->getPrefix(), "=", channel_name, ch->getUserNameList()), fd);
+		if (channel->getChannelTopic() != "")
+			sendMessage(RPL_TOPIC(user->getPrefix(), channel_name, channel->getChannelTopic()), fd);
+		channel->addChannelOperator(user);
+		sendMessage(RPL_NAMREPLY(user->getPrefix(), "=", channel_name, channel->getUserNameList()), fd);
 		sendMessage(RPL_ENDOFNAMES(user->getPrefix(), channel_name), fd);
 		return ;
 	}
 	// ------------------------------------------------------exist channel
-	if (ch->isChannelUser(user) == true)
+	if (channel->isChannelUser(user) == true)
 		return ;
 	// ------------------------------------------------------error::client exceed max channel cnt
 	else if (user->checkChannelLimit() == -1)
 		return sendMessage(ERR_TOOMANYCHANNELS(user->getNickname(), "JOIN"), fd);
 	// error::
-	else if (ch->checkUserLimit() == -1)
+	else if (channel->checkUserLimit() == -1)
 		sendMessage(ERR_CHANNELISFULL(user->getNickname(), channel_name), fd);
-	else if (ch->getChannelMode().find('i') != ch->getChannelMode().end() && !ch->isInvitedUser(user))
+	else if (channel->getChannelMode().find('i') != channel->getChannelMode().end() && !channel->isInvitedUser(user))
 		sendMessage(ERR_INVITEONLYCHAN(user->getNickname(), channel_name), fd);
-	else if (ch->checkInvite(fd) == -1 && ch->checkPassword(password) == -1)
+	else if (channel->checkInvite(fd) == -1 && channel->checkPassword(password) == -1)
 		sendMessage(ERR_BADCHANNELKEY(user->getNickname(), channel_name), fd);
 	// Success:: exist channel
 	else {
-		ch->addChannelUser(user);
-		ch->removeInvitedUser(user);
+		channel->addChannelUser(user);
+		channel->removeInvitedUser(user);
 		sendMessage(RPL_JOIN(user->getPrefix(), channel_name),fd);
-		broadcastChannelMessage(RPL_JOIN(user->getPrefix(), channel_name), ch, fd);
-		if (ch->getChannelTopic() != "")
-			sendMessage(RPL_TOPIC(user->getPrefix(), channel_name, ch->getChannelTopic()), fd);
-		sendMessage(RPL_NAMREPLY(user->getPrefix(), "=", channel_name, ch->getUserNameList()), fd);
+		broadcastChannelMessage(RPL_JOIN(user->getPrefix(), channel_name), channel, fd);
+		if (channel->getChannelTopic() != "")
+			sendMessage(RPL_TOPIC(user->getPrefix(), channel_name, channel->getChannelTopic()), fd);
+		sendMessage(RPL_NAMREPLY(user->getPrefix(), "=", channel_name, channel->getUserNameList()), fd);
 		sendMessage(RPL_ENDOFNAMES(user->getPrefix(), channel_name), fd);
 	}
 }
@@ -96,7 +94,7 @@ void	Server::commandUser(std::vector<std::string> token, int fd) {
 	Client *user = searchClient(fd);
 	const int paramcnt = token.size();
 
-	if(user != NULL)  // already in user_list
+	if (user)  // already in user_list
 		return sendMessage(ERR_ALREADYREGISTERED(user->getNickname()), fd);
 	if (paramcnt == 5 && token [4][0] == ':')
 		realname = &(token[4][1]);
@@ -117,7 +115,7 @@ void	Server::commandPass(std::vector<std::string> token, int fd) {
 	Client *user = NULL;
 	std::map<int, Client *>::iterator iter = _temp_list.find(fd);
 	user = searchClient(fd);
-	if(user != NULL)
+	if (user)
 		sendMessage(ERR_ALREADYREGISTERED(user->getNickname()), fd);
 	else if (token.size() != 2)
 		sendMessage(ERR_NEEDMOREPARAMS((std::string)"root", (std::string)"PASS"), fd);
@@ -136,7 +134,7 @@ void	Server::commandPass(std::vector<std::string> token, int fd) {
 
 void	Server::commandNick(std::vector<std::string> token, int fd) {
 	Client *user = searchClient(fd);
-	if (user == NULL) {
+	if (!user) {
 		if (token.size() < 2)
 			return sendMessage(ERR_NEEDMOREPARAMS((std::string)"*", "NICK"), fd);
 		if (token[1][0] == ':')
@@ -144,20 +142,20 @@ void	Server::commandNick(std::vector<std::string> token, int fd) {
 		if (token.size() > 2 || token[1][0] == ':' || token[1][0] == '*' || token[1] == "" || std::isdigit(token[1][0])) {
 			user = searchTemp(fd);
 			if (token.size() == 2 && token[1].length() == 0) {
-				if (user == NULL || user->getNickname() == "")
+				if (!user || user->getNickname() == "")
 					return sendMessage(ERR_NONICKNAMEGIVEN((std::string)"*"), fd);
 				return sendMessage(ERR_NONICKNAMEGIVEN(user->getNickname()), fd);
 			}
 			std::string params;
 			params = getTotalParams(1, token);
-			if (user == NULL || user->getNickname() == "")
+			if (!user || user->getNickname() == "")
 				return sendMessage(ERR_ERRONEOUSNICKNAME((std::string)"*", params), fd);
 			return sendMessage(ERR_ERRONEOUSNICKNAME(user->getNickname(), params), fd);
 		}
 		if (searchClient(token[1]) || searchTemp(token[1]))
 			return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
 		user = searchTemp(fd);
-		if (user == NULL) {
+		if (!user) {
 			user = new Client(fd);
 			_temp_list.insert(std::make_pair(fd, user));
 		}
@@ -217,28 +215,27 @@ void Server::commandMode(std::vector<std::string> token, Client *user, int fd) {
 	}
 }
 
-// PART(0) #ch(1) msg(2~)
+// PART(0) #channel(1) message(2~)
 void	Server::commandPart(std::vector<std::string> token, Client *user, int fd) {
 	if (token.size() == 1)
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-	Channel *ch = searchChannel(token[1]);
-	if (!ch)
+	Channel *channel = searchChannel(token[1]);
+	if (!channel)
 		return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[1]), fd);
 	std::string msg = "";
 	if (token.size() > 2)
 		msg = getTotalMessage(2, token);
-	if (!ch->isChannelUser(user))
+	if (!channel->isChannelUser(user))
 		return sendMessage(ERR_NOTONCHANNEL(user->getNickname(), token[1]), fd);
-	if (ch->isChannelOperator(user) == true){
-		ch->removeChannelOperator(user);
-	}
-	ch->removeChannelUser(user);
-	if (ch->getUserCount() == 0) {
-		removeChannelList(ch->getChannelName());
-		deleteChannel(&ch);
+	if (channel->isChannelOperator(user))
+		channel->removeChannelOperator(user);
+	channel->removeChannelUser(user);
+	if (channel->getUserCount() == 0) {
+		removeChannelList(channel->getChannelName());
+		deleteChannel(&channel);
 	}
 	sendMessage(RPL_PART(user->getPrefix(), token[1]), fd);
-	broadcastChannelMessage(RPL_PART(user->getPrefix(), token[1]), ch);
+	broadcastChannelMessage(RPL_PART(user->getPrefix(), token[1]), channel);
 }
 
 static std::vector<std::string> splitString(const std::string &str, char delim) {
@@ -254,21 +251,31 @@ static std::vector<std::string> splitString(const std::string &str, char delim) 
 void	Server::commandPrivmsg(std::vector<std::string> token, Client *user, int fd) {
 	if (token.size() < 3 )
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-	std::string message = getTotalMessage(2, token);
+	if (token[2][0] == ':')
+		token[2] = token[2].substr(1);
+	if (token[2] == "")
+		return sendMessage(ERR_NOTEXTTOSEND(user->getNickname()), fd);
+	std::string message = getTotalParams(2, token);
 	std::vector<std::string>target = splitString(token[1], ',');
 	for (unsigned int i = 0; i < target.size(); i++) {
 		if (target[i][0] == '#') {
 			Channel *channel = searchChannel(target[i]);
-			if (!channel)
-				return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), target[i]), fd);
-			if (!channel->isChannelUser(user))
-				return sendMessage(ERR_CANNOTSENDTOCHAN(user->getNickname(), target[i]), fd);
+			if (!channel) {
+				sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), target[i]), fd);
+				continue ;
+			}
+			if (!channel->isChannelUser(user)) {
+				sendMessage(ERR_CANNOTSENDTOCHAN(user->getNickname(), target[i]), fd);
+				continue ;
+			}
 			broadcastChannelMessage(RPL_PRIVMSG(user->getPrefix(), target[i], message), channel, fd);
 		}
 		else {
 			Client *target_user = searchClient(target[i]);
-			if (!target_user)
-				return sendMessage(ERR_NOSUCHNICK(user->getNickname(), target[i]), fd);
+			if (!target_user) {
+				sendMessage(ERR_NOSUCHNICK(user->getNickname(), target[i]), fd);
+				continue ;
+			}
 			sendMessage(RPL_PRIVMSG(user->getPrefix(), target[i], message), target_user->getSocketFd());
 		}
 	}
@@ -278,26 +285,26 @@ void	Server::commandInvite(std::vector<std::string> token, Client *user, int fd)
 	// invite nickname #channel - 파라미터
 	if (token.size() != 3 )
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-	Channel	*ch = searchChannel(token[2]);
+	Channel	*channel = searchChannel(token[2]);
 	Client	*new_user = searchClient(token[1]);
 	// 없는 채널일 경우
-	if (!ch)
+	if (!channel)
 		sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[2]), fd);
 	// 채널에 없는 유저가 보낸 경우
-	else if (!ch->isChannelUser(user))
+	else if (!channel->isChannelUser(user))
 		sendMessage(ERR_NOTONCHANNEL(user->getNickname(), token[2]), fd);
 	// 오퍼레이터가 아닌 경우
-	else if (!ch->isChannelOperator(user))
+	else if (!channel->isChannelOperator(user))
 		sendMessage(ERR_CHANOPRIVSNEEDED(user->getNickname(), token[2]), fd);
 	// 닉네임이 없는 경우
 	else if (!user)
 		sendMessage(ERR_NOSUCHNICK(user->getNickname(), token[1]), fd);
 	// 이미 채널에 있는 유저일경우
-	else if (ch->isChannelUser(new_user))
+	else if (channel->isChannelUser(new_user))
 		sendMessage(ERR_USERONCHANNEL(user->getNickname(), token[1], token[2]), fd);
 	// 정상실행 ::	해당 유저 인바이트 리스트에 추가
-	else{
-		ch->addInvitedUser(new_user);
+	else {
+		channel->addInvitedUser(new_user);
 		sendMessage(RPL_INVITE(user->getPrefix(), token[1], token[2]), fd);
 		Client *tmp_user = searchClient(token[1]);
 		sendMessage(RPL_INVITING(user->getPrefix(), token[1], token[2]), tmp_user->getSocketFd());
@@ -309,36 +316,36 @@ void	Server::commandKick(std::vector<std::string> token, Client *user, int fd) {
 	int tokensize = token.size();
 	if (tokensize <= 2 )
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-	Channel *ch = searchChannel(token[1]);
+	Channel *channel = searchChannel(token[1]);
 	Client	*kickUser = searchClient(token[2]);
 	std::string msg = getTotalMessage(3, token);
-	if (!ch)
+	if (!channel)
 		return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[1]), fd);
 	// 사용자가 채널에 없음
-	else if (!ch->isChannelUser(user))
-		sendMessage(ERR_NOTONCHANNEL(user->getNickname(), ch->getChannelName()), fd);
+	else if (!channel->isChannelUser(user))
+		sendMessage(ERR_NOTONCHANNEL(user->getNickname(), channel->getChannelName()), fd);
 	// 킥할 유저가 서버에 없음
 	else if (!kickUser)
 		sendMessage(ERR_NOSUCHNICK(user->getNickname(), token[2]), fd);
 	// 킥할 유저가 채널에 없음
-	else if (!ch->isChannelUser(kickUser))
-		sendMessage(ERR_USERNOTINCHANNEL(user->getNickname(), token[2], ch->getChannelName()), fd);
+	else if (!channel->isChannelUser(kickUser))
+		sendMessage(ERR_USERNOTINCHANNEL(user->getNickname(), token[2], channel->getChannelName()), fd);
 	// 권한 없음 :: 사용자가 오퍼레이터가 아니고 오퍼레이터가 존재함
-	else if (!ch->isChannelOperator(user)) {
-		if (ch->getChannelOperator().size() == 0)
-			sendMessage(ERR_CHANOPRIVSNEEDED2(user->getNickname(), ch->getChannelName()), fd);
+	else if (!channel->isChannelOperator(user)) {
+		if (channel->getChannelOperator().size() == 0)
+			sendMessage(ERR_CHANOPRIVSNEEDED2(user->getNickname(), channel->getChannelName()), fd);
 		else
-			sendMessage(ERR_CHANOPRIVSNEEDED(user->getNickname(), ch->getChannelName()), fd);
+			sendMessage(ERR_CHANOPRIVSNEEDED(user->getNickname(), channel->getChannelName()), fd);
 	}
 	// 정상실행
 	else {
-		broadcastChannelMessage(RPL_KICK(user->getPrefix(), ch->getChannelName(), kickUser->getNickname(), msg), ch);
-		if (ch->isChannelOperator(kickUser))
-			ch->removeChannelOperator(kickUser);
-		ch->removeChannelUser(kickUser);
-		if (ch->getUserCount() == 0) {
-			removeChannelList(ch->getChannelName());
-			deleteChannel(&ch);
+		broadcastChannelMessage(RPL_KICK(user->getPrefix(), channel->getChannelName(), kickUser->getNickname(), msg), channel);
+		if (channel->isChannelOperator(kickUser))
+			channel->removeChannelOperator(kickUser);
+		channel->removeChannelUser(kickUser);
+		if (channel->getUserCount() == 0) {
+			removeChannelList(channel->getChannelName());
+			deleteChannel(&channel);
 		}
 	}
 }
@@ -348,26 +355,25 @@ void	Server::commandTopic(std::vector<std::string> token, Client *user, int fd) 
 	int tokensize = token.size();
 	if (tokensize == 1)
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-	Channel *ch = searchChannel(token[1]);
-	if (!ch)
+	Channel *channel = searchChannel(token[1]);
+	if (!channel)
 		return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[1]), fd);
 	if (tokensize == 2) {  // topic : view
-		std::string topic = ch->getChannelTopic();
+		std::string topic = channel->getChannelTopic();
 		if (topic == "" )
 			sendMessage(RPL_NOTOPIC(user->getPrefix(), token[1]), fd);
-		else {
+		else
 			sendMessage(RPL_TOPIC(user->getPrefix(), token[1], topic),fd);
-		}
 	}
 	else if (tokensize >= 3) {  // set topic
 		std::string topic = getTotalMessage(2, token);
-		if (ch->checkChannelMode('t') && !ch->isChannelOperator(user))
+		if (channel->checkChannelMode('t') && !channel->isChannelOperator(user))
 			return sendMessage(ERR_CHANOPRIVSNEEDED(user->getNickname(), token[1]), fd);
-		else if (!ch->isChannelUser(user))
-			return sendMessage(ERR_NOTONCHANNEL(user->getNickname(), ch->getChannelName()), fd);
+		else if (!channel->isChannelUser(user))
+			return sendMessage(ERR_NOTONCHANNEL(user->getNickname(), channel->getChannelName()), fd);
 		else {
-			ch->setChannelTopic(topic);
-			broadcastChannelMessage(RPL_MY_TOPIC(user->getPrefix(), ch->getChannelName(), ch->getChannelTopic()), ch);
+			channel->setChannelTopic(topic);
+			broadcastChannelMessage(RPL_MY_TOPIC(user->getPrefix(), channel->getChannelName(), channel->getChannelTopic()), channel);
 		}
 	}
 }
@@ -376,19 +382,19 @@ void	Server::commandQuit(std::vector<std::string> token, Client *user, int fd) {
 	std::string msg = getTotalMessage(1, token);
 	std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
 	while (iter != _channel_list.end()) {
-		Channel *ch = iter->second;
+		Channel *channel = iter->second;
 		++iter;
-		if (ch->isChannelUser(user)) {
-			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), msg), ch, fd);
-			if (ch->isInvitedUser(user))
-				ch->removeInvitedUser(user);
-			if(ch->isChannelOperator(user))
-				ch->removeChannelOperator(user);
-			ch->removeChannelUser(user);
+		if (channel->isChannelUser(user)) {
+			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), msg), channel, fd);
+			if (channel->isInvitedUser(user))
+				channel->removeInvitedUser(user);
+			if(channel->isChannelOperator(user))
+				channel->removeChannelOperator(user);
+			channel->removeChannelUser(user);
 		}
-		if (!ch->getUserCount()){
-			removeChannelList(ch->getChannelName());
-			deleteChannel(&ch);
+		if (!channel->getUserCount()) {
+			removeChannelList(channel->getChannelName());
+			deleteChannel(&channel);
 		}
 	}
 	disconnectClient(fd);

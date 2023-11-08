@@ -23,7 +23,7 @@ Client::Client(int socket_fd) : _socket_fd(socket_fd), _pass(false) {
 Client::Client(int socket_fd, std::string nickname, std::string username,
 std::string hostname, std::string realname, std::string user_ip)
 : _socket_fd(socket_fd), _nickname(nickname), _username(username), _hostname(hostname),
-_realname(realname), _user_ip(user_ip), _pass(false){
+_realname(realname), _user_ip(user_ip), _pass(false) {
 	_channel_list = std::map<std::string, Channel *>();
 	_channel_limit = CLIENT_CHANNEL_LIMIT;
 }

@@ -47,7 +47,7 @@ const std::string Channel::getUserNameList() {
 		res += iter->second->getNickname();
 		res += " ";
 	}
-	return (res);
+	return res;
 }
 
 void	Channel::setChannelName(std::string new_name) { _name = new_name; }
@@ -180,7 +180,7 @@ void	Channel::setUserLimit(long new_limits) { _user_limit = new_limits; }
 
 void	Channel::clearChannelMode() { _mode.clear(); }
 
-bool Channel::checkChannelMode(char c)
+bool	Channel::checkChannelMode(char c)
 {
 	if (_mode.find(c) == _mode.end())
 		return false;
@@ -206,7 +206,7 @@ std::vector<std::string>	Channel::getChannelModeParams() const {
 }
 
 bool	Channel::isChannelOperator(Client *client) {  // 오퍼레이터 목록에 있는지 확인
-	return (_operator.find(client->getSocketFd()) != _operator.end());
+	return _operator.find(client->getSocketFd()) != _operator.end();
 }
 
 Client	*Channel::findChannelOperator(std::string nickname) {
@@ -264,7 +264,7 @@ Client	*Channel::findChannelUser(Client *client) {  // 유저 목록에서 찾�
 }
 
 
-bool	Channel::addChannelUser(Client *client){  //유저 채널에 추가하는 함수
+bool	Channel::addChannelUser(Client *client) {  //유저 채널에 추가하는 함수
 	Client *user = findChannelUser(client);
 	if (!user) {
 		_user_list.insert(std::make_pair(client->getSocketFd(), client));
@@ -306,7 +306,7 @@ bool	Channel::addInvitedUser(Client *client) {
 	return false;
 }
 
-bool	Channel::removeInvitedUser(Client *client){  //채널에 초대된 유저 지우기
+bool	Channel::removeInvitedUser(Client *client) {  //채널에 초대된 유저 지우기
 	if (isInvitedUser(client)) {
 		_invite_list.erase(client->getSocketFd());
 		return true;

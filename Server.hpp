@@ -39,8 +39,8 @@ class Server {
 
 		// Message
 		void	sendMessage(std::string message, int fd);									// 메세지 보내기
-		void	broadcastChannelMessage(std::string message, Channel *ch);					// 채널에 메세지 보내기 (본인 포함)
-		void	broadcastChannelMessage(std::string message, Channel *ch, int socket_fd);	// 채널에 메세지 보내기 (본인 제외)
+		void	broadcastChannelMessage(std::string message, Channel *channel);					// 채널에 메세지 보내기 (본인 포함)
+		void	broadcastChannelMessage(std::string message, Channel *channel, int socket_fd);	// 채널에 메세지 보내기 (본인 제외)
 
 		// Command
 		void	handleCommand(std::string command, int fd);								// 명령어 처리
