@@ -2,7 +2,8 @@
 # define MESSAGE_H
 // error
 # define ERR_TOOMANYCHANNELS(user, channel) "405 " + user + " " + channel + " :You have joined too many channels" + "\r\n"
-# define ERR_NONICKNAMEGIVEN(user) "431 " + user + " :Nickname not given" + "\r\n"
+# define ERR_NONICKNAMEGIVEN(user) "431 " + user + " :No nickname given" + "\r\n"
+# define ERR_ERRONEOUSNICKNAME(user, param) "432 " + user + " " + param + " :Erroneous Nickname" + "\r\n"
 # define ERR_NICKNAMEINUSE(user) "433 " + user + " " + user + " :Nickname is already in use" + "\r\n"
 # define ERR_NEEDMOREPARAMS(source, command) "461 " + source + " " + command + " :Not enough parameters" + "\r\n"
 # define ERR_ALREADYREGISTERED(source) "462 " + source + " :You may not register" + "\r\n"

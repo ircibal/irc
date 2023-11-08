@@ -283,9 +283,17 @@ Client	*Server::searchClient(int fd) {
 	return NULL;
 }
 
+Client	*Server::searchTemp(std::string nickname) {
+	for (std::map<int, Client *>::iterator iter = this->_temp_list.begin();
+		iter != _temp_list.end(); iter++)
+		if (iter->second->getNickname() == nickname)
+			return iter->second;
+	return NULL;
+}
+
 Client	*Server::searchTemp(int fd) {
 	std::map<int, Client *>::iterator iter = _temp_list.find(fd);
 	if (iter != _temp_list.end())
 		return iter->second;
-	return (NULL);
+	return NULL;
 }

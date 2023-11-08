@@ -1,7 +1,6 @@
 #include "message.h"
 #include "util.h"
 #include "Server.hpp"
-#include <iostream>
 
 // int Client::checkLimit == -1  : 유저가 가입할 수 있는 최대 채널 갯수 초과 체크
 // int Channel::checkUserLimit == -1  : 채널에 가입할 수 있는 최대 인원 초과 체크
@@ -21,6 +20,19 @@ static std::string getTotalMessage(size_t start, std::vector<std::string> token)
 	message += token[token_size - 1];
 	if (message == ":")
 		return "";
+	return message;
+}
+
+static std::string getTotalParams(size_t start, std::vector<std::string> token) {
+	std::string	message = "";
+	size_t	token_size = token.size();
+	if (start > token_size)
+		return message;
+	for (size_t i = start; i < token_size - 1; i++) {
+		message += token[i];
+		message += " ";
+	}
+	message += token[token_size - 1];
 	return message;
 }
 
@@ -125,23 +137,45 @@ void	Server::commandPass(std::vector<std::string> token, int fd) {
 void	Server::commandNick(std::vector<std::string> token, int fd) {
 	Client *user = searchClient(fd);
 	if (user == NULL) {
-		if (token.size() != 2)
-			return sendMessage(ERR_NEEDMOREPARAMS((std::string)"", "NICK"), fd);
-		if (searchClient(token[1]))
+		if (token.size() < 2)
+			return sendMessage(ERR_NEEDMOREPARAMS((std::string)"*", "NICK"), fd);
+		if (token[1][0] == ':')
+			token[1] = token[1].substr(1);
+		if (token.size() > 2 || token[1][0] == ':' || token[1][0] == '*' || token[1] == "" || std::isdigit(token[1][0])) {
+			user = searchTemp(fd);
+			if (token.size() == 2 && token[1].length() == 0) {
+				if (user == NULL || user->getNickname() == "")
+					return sendMessage(ERR_NONICKNAMEGIVEN((std::string)"*"), fd);
+				return sendMessage(ERR_NONICKNAMEGIVEN(user->getNickname()), fd);
+			}
+			std::string params;
+			params = getTotalParams(1, token);
+			if (user == NULL || user->getNickname() == "")
+				return sendMessage(ERR_ERRONEOUSNICKNAME((std::string)"*", params), fd);
+			return sendMessage(ERR_ERRONEOUSNICKNAME(user->getNickname(), params), fd);
+		}
+		if (searchClient(token[1]) || searchTemp(token[1]))
 			return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
 		user = searchTemp(fd);
-		if (user != NULL)
-			user->setNickname(token[1]);
-		else {
+		if (user == NULL) {
 			user = new Client(fd);
-			user->setNickname(token[1]);
 			_temp_list.insert(std::make_pair(fd, user));
 		}
+		user->setNickname(token[1]);
 	}
 	else {
-		if (token.size() != 2)
+		if (token.size() < 2)
 			return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), "NICK"), fd);
-		if (searchClient(token[1]))
+		if (token[1][0] == ':')
+			token[1] = token[1].substr(1);
+		if (token.size() > 2 || token[1][0] == ':' || token[1][0] == '*' || token[1] == "" || std::isdigit(token[1][0])) {
+			if (token.size() == 2 && token[1].length() == 0)
+				return sendMessage(ERR_NONICKNAMEGIVEN(user->getNickname()), fd);
+			std::string params;
+			params = getTotalParams(1, token);
+			return sendMessage(ERR_ERRONEOUSNICKNAME(user->getNickname(), params), fd);
+		}
+		if (searchClient(token[1]) || searchTemp(token[1]))
 			return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
 		user->setNickname(token[1]);
 		sendMessage(RPL_NICK(user->getPrefix(), token[1]), fd);

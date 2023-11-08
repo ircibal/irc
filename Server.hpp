@@ -51,6 +51,7 @@ class Server {
 		// Search
 		Client	*searchClient(std::string nickname);	// 유저 검색
 		Client	*searchClient(int fd);
+		Client	*searchTemp(std::string nickname);
 		Client	*searchTemp(int fd);					// 임시 유저 검색 - 인증 전 유저들
 
 		// Command
