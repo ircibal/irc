@@ -186,6 +186,8 @@ void	Server::parsingData(int fd) {
 
 		while(input_str >> word)
 			tokenizer.push_back(word);
+		if (tokenizer.size() == 0)
+			return ;
 		if (tokenizer[0] == "PASS" || tokenizer[0] == "NICK" || tokenizer[0] == "USER") {
 			if (tokenizer[0] == "PASS") {commandPass(tokenizer, fd);}
 			else if (tokenizer[0] == "NICK") {commandNick(tokenizer, fd);
