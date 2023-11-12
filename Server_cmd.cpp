@@ -134,11 +134,11 @@ void	Server::commandPass(std::vector<std::string> token, int fd) {
 
 void	Server::commandNick(std::vector<std::string> token, int fd) {
 	Client *user = searchClient(fd); //null checked
+	if (token.size() < 2)
+		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), "NICK"), fd);
+	if (token[1][0] == ':')
+		token[1] = token[1].substr(1);
 	if (!user) {
-		if (token.size() < 2)
-			return sendMessage(ERR_NEEDMOREPARAMS((std::string)"*", "NICK"), fd);
-		if (token[1][0] == ':')
-			token[1] = token[1].substr(1);
 		if (token.size() > 2 || token[1][0] == ':' || token[1][0] == '*' || token[1] == "" || std::isdigit(token[1][0])) {
 			user = searchTemp(fd);//null checked
 			if (token.size() == 2 && token[1].length() == 0) {
@@ -162,10 +162,6 @@ void	Server::commandNick(std::vector<std::string> token, int fd) {
 		user->setNickname(token[1]);
 	}
 	else {
-		if (token.size() < 2)
-			return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), "NICK"), fd);
-		if (token[1][0] == ':')
-			token[1] = token[1].substr(1);
 		if (token.size() > 2 || token[1][0] == ':' || token[1][0] == '*' || token[1] == "" || std::isdigit(token[1][0])) {
 			if (token.size() == 2 && token[1].length() == 0)
 				return sendMessage(ERR_NONICKNAMEGIVEN(user->getNickname()), fd);
@@ -175,8 +171,8 @@ void	Server::commandNick(std::vector<std::string> token, int fd) {
 		}
 		if (searchClient(token[1]) || searchTemp(token[1]))//null checked
 			return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
-		user->setNickname(token[1]);
 		sendMessage(RPL_NICK(user->getPrefix(), token[1]), fd);
+		user->setNickname(token[1]);
 	}
 }
 
