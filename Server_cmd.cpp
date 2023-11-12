@@ -50,7 +50,7 @@ void	Server::commandJoin(std::vector<std::string> token, Client *user, int fd) {
 	// error::no channel name
 	if (paramcnt < 1)
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), "JOIN"), fd);
-	Channel *channel = searchChannel(channel_name);
+	Channel *channel = searchChannel(channel_name); //null checked
 	// ------------------------------------------------------success::new channel
 	if (!channel) {
 		channel = makeChannel(channel_name , user);
@@ -91,7 +91,7 @@ void	Server::commandJoin(std::vector<std::string> token, Client *user, int fd) {
 // USER "username" "hostname" "servername" :"realname"
 void	Server::commandUser(std::vector<std::string> token, int fd) {
 	std::string realname = D_REALNAME;
-	Client *user = searchClient(fd);
+	Client *user = searchClient(fd);//null checked
 	const int paramcnt = token.size();
 
 	if (user)  // already in user_list
@@ -100,7 +100,7 @@ void	Server::commandUser(std::vector<std::string> token, int fd) {
 		realname = &(token[4][1]);
 	else  // param err
 		return sendMessage(ERR_NEEDMOREPARAMS((std::string)"root", (std::string)"USER"), fd);
-	user = searchTemp(fd);
+	user = searchTemp(fd);//null checked
 	if (!user) {
 		user = new Client(fd);
 		_temp_list.insert(std::make_pair(fd, user));
@@ -114,7 +114,7 @@ void	Server::commandUser(std::vector<std::string> token, int fd) {
 void	Server::commandPass(std::vector<std::string> token, int fd) {
 	Client *user = NULL;
 	std::map<int, Client *>::iterator iter = _temp_list.find(fd);
-	user = searchClient(fd);
+	user = searchClient(fd); //null checked
 	if (user)
 		sendMessage(ERR_ALREADYREGISTERED(user->getNickname()), fd);
 	else if (token.size() != 2)
@@ -133,14 +133,14 @@ void	Server::commandPass(std::vector<std::string> token, int fd) {
 }
 
 void	Server::commandNick(std::vector<std::string> token, int fd) {
-	Client *user = searchClient(fd);
+	Client *user = searchClient(fd); //null checked
 	if (!user) {
 		if (token.size() < 2)
 			return sendMessage(ERR_NEEDMOREPARAMS((std::string)"*", "NICK"), fd);
 		if (token[1][0] == ':')
 			token[1] = token[1].substr(1);
 		if (token.size() > 2 || token[1][0] == ':' || token[1][0] == '*' || token[1] == "" || std::isdigit(token[1][0])) {
-			user = searchTemp(fd);
+			user = searchTemp(fd);//null checked
 			if (token.size() == 2 && token[1].length() == 0) {
 				if (!user || user->getNickname() == "")
 					return sendMessage(ERR_NONICKNAMEGIVEN((std::string)"*"), fd);
@@ -152,9 +152,9 @@ void	Server::commandNick(std::vector<std::string> token, int fd) {
 				return sendMessage(ERR_ERRONEOUSNICKNAME((std::string)"*", params), fd);
 			return sendMessage(ERR_ERRONEOUSNICKNAME(user->getNickname(), params), fd);
 		}
-		if (searchClient(token[1]) || searchTemp(token[1]))
+		if (searchClient(token[1]) || searchTemp(token[1]))//null checked
 			return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
-		user = searchTemp(fd);
+		user = searchTemp(fd); //null checked
 		if (!user) {
 			user = new Client(fd);
 			_temp_list.insert(std::make_pair(fd, user));
@@ -173,7 +173,7 @@ void	Server::commandNick(std::vector<std::string> token, int fd) {
 			params = getTotalParams(1, token);
 			return sendMessage(ERR_ERRONEOUSNICKNAME(user->getNickname(), params), fd);
 		}
-		if (searchClient(token[1]) || searchTemp(token[1]))
+		if (searchClient(token[1]) || searchTemp(token[1]))//null checked
 			return sendMessage(ERR_NICKNAMEINUSE(token[1]), fd);
 		user->setNickname(token[1]);
 		sendMessage(RPL_NICK(user->getPrefix(), token[1]), fd);
@@ -190,7 +190,7 @@ void	Server::commandPing(std::vector<std::string> token, Client *user,  int fd) 
 // MODE <target> [<modestring> [<mode arguments>...]]
 void Server::commandMode(std::vector<std::string> token, Client *user, int fd) {
 	if (token.size() == 2) {
-		Channel *channel = searchChannel(token[1]);
+		Channel *channel = searchChannel(token[1]);//null checked
 		if (!channel)
 			return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[1]), fd);
 		std::vector<std::string> mode_params = channel->getChannelModeParams();
@@ -198,7 +198,7 @@ void Server::commandMode(std::vector<std::string> token, Client *user, int fd) {
 	}
 	else if (token.size() > 2) {  //channel mode
 		if (token[1][0] == '#') {
-			Channel *channel = searchChannel(token[1]);
+			Channel *channel = searchChannel(token[1]); //null checked
 			if (!channel)
 				return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[1]), fd);
 			try {
@@ -259,7 +259,7 @@ void	Server::commandPrivmsg(std::vector<std::string> token, Client *user, int fd
 	std::vector<std::string>target = splitString(token[1], ',');
 	for (unsigned int i = 0; i < target.size(); i++) {
 		if (target[i][0] == '#') {
-			Channel *channel = searchChannel(target[i]);
+			Channel *channel = searchChannel(target[i]);//null checked
 			if (!channel) {
 				sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), target[i]), fd);
 				continue ;
@@ -271,7 +271,7 @@ void	Server::commandPrivmsg(std::vector<std::string> token, Client *user, int fd
 			broadcastChannelMessage(RPL_PRIVMSG(user->getPrefix(), target[i], message), channel, fd);
 		}
 		else {
-			Client *target_user = searchClient(target[i]);
+			Client *target_user = searchClient(target[i]);//null checked
 			if (!target_user) {
 				sendMessage(ERR_NOSUCHNICK(user->getNickname(), target[i]), fd);
 				continue ;
@@ -285,29 +285,28 @@ void	Server::commandInvite(std::vector<std::string> token, Client *user, int fd)
 	// invite nickname #channel - 파라미터
 	if (token.size() != 3 )
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-	Channel	*channel = searchChannel(token[2]);
-	Client	*new_user = searchClient(token[1]);
+	Channel	*channel = searchChannel(token[2]); //null checked
+	Client	*new_user = searchClient(token[1]); //null checked
 	// 없는 채널일 경우
 	if (!channel)
-		sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[2]), fd);
+		return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[2]), fd);
 	// 채널에 없는 유저가 보낸 경우
+	else if (!new_user)
+		return sendMessage(ERR_NOSUCHNICK(user->getNickname(), token[1]), fd);
 	else if (!channel->isChannelUser(user))
 		sendMessage(ERR_NOTONCHANNEL(user->getNickname(), token[2]), fd);
 	// 오퍼레이터가 아닌 경우
 	else if (!channel->isChannelOperator(user))
 		sendMessage(ERR_CHANOPRIVSNEEDED(user->getNickname(), token[2]), fd);
 	// 닉네임이 없는 경우
-	else if (!user)
-		sendMessage(ERR_NOSUCHNICK(user->getNickname(), token[1]), fd);
 	// 이미 채널에 있는 유저일경우
 	else if (channel->isChannelUser(new_user))
 		sendMessage(ERR_USERONCHANNEL(user->getNickname(), token[1], token[2]), fd);
 	// 정상실행 ::	해당 유저 인바이트 리스트에 추가
 	else {
 		channel->addInvitedUser(new_user);
-		sendMessage(RPL_INVITE(user->getPrefix(), token[1], token[2]), fd);
-		Client *tmp_user = searchClient(token[1]);
-		sendMessage(RPL_INVITING(user->getPrefix(), token[1], token[2]), tmp_user->getSocketFd());
+		sendMessage(RPL_INVITE(user->getPrefix(), token[1], token[2]), new_user->getSocketFd());
+		sendMessage(RPL_INVITING(user->getPrefix(), token[1], token[2]), fd);
 	}
 }
 
@@ -316,17 +315,17 @@ void	Server::commandKick(std::vector<std::string> token, Client *user, int fd) {
 	int tokensize = token.size();
 	if (tokensize <= 2 )
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-	Channel *channel = searchChannel(token[1]);
-	Client	*kickUser = searchClient(token[2]);
+	Channel *channel = searchChannel(token[1]); //null checked
+	Client	*kickUser = searchClient(token[2]); //null checked
 	std::string msg = getTotalMessage(3, token);
 	if (!channel)
 		return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[1]), fd);
+	// 킥할 유저가 서버에 없음
+	else if (!kickUser)
+		return sendMessage(ERR_NOSUCHNICK(user->getNickname(), token[2]), fd);
 	// 사용자가 채널에 없음
 	else if (!channel->isChannelUser(user))
 		sendMessage(ERR_NOTONCHANNEL(user->getNickname(), channel->getChannelName()), fd);
-	// 킥할 유저가 서버에 없음
-	else if (!kickUser)
-		sendMessage(ERR_NOSUCHNICK(user->getNickname(), token[2]), fd);
 	// 킥할 유저가 채널에 없음
 	else if (!channel->isChannelUser(kickUser))
 		sendMessage(ERR_USERNOTINCHANNEL(user->getNickname(), token[2], channel->getChannelName()), fd);
@@ -355,7 +354,7 @@ void	Server::commandTopic(std::vector<std::string> token, Client *user, int fd) 
 	int tokensize = token.size();
 	if (tokensize == 1)
 		return sendMessage(ERR_NEEDMOREPARAMS(user->getNickname(), token[0]), fd);
-	Channel *channel = searchChannel(token[1]);
+	Channel *channel = searchChannel(token[1]); //null checked
 	if (!channel)
 		return sendMessage(ERR_NOSUCHCHANNEL(user->getNickname(), token[1]), fd);
 	if (tokensize == 2) {  // topic : view

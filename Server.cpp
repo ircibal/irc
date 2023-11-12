@@ -130,20 +130,22 @@ void	Server::changeEvents(std::vector<struct kevent>& change_list, uintptr_t ide
 
 void	Server::disconnectClient(int client_fd) {
 	close(client_fd);
-	Client *user = searchClient(client_fd);
-	std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
-	while (iter != _channel_list.end()) {
-		Channel *channel = iter->second;
-		++iter;
-		if (channel->isChannelUser(user)) {
-			broadcastChannelMessage(RPL_QUIT(user->getPrefix(), "disconnected client"), channel, client_fd);
-			if(channel->isChannelOperator(user))
-				channel->removeChannelOperator(user);
-			channel->removeChannelUser(user);
-		}
-		if (channel->getUserCount() == 0) {
-			removeChannelList(channel->getChannelName());
-			deleteChannel(&channel);
+	Client *user = searchClient(client_fd); //null checked
+	if (user){
+		std::map<std::string, Channel *>::iterator iter = _channel_list.begin();
+		while (iter != _channel_list.end()) {
+			Channel *channel = iter->second;
+			++iter;
+			if (channel->isChannelUser(user)) {
+				broadcastChannelMessage(RPL_QUIT(user->getPrefix(), "disconnected client"), channel, client_fd);
+				if(channel->isChannelOperator(user))
+					channel->removeChannelOperator(user);
+				channel->removeChannelUser(user);
+			}
+			if (channel->getUserCount() == 0) {
+				removeChannelList(channel->getChannelName());
+				deleteChannel(&channel);
+			}
 		}
 	}
 	this->_clients.erase(client_fd);
@@ -186,9 +188,12 @@ void	Server::parsingData(int fd) {
 			tokenizer.push_back(word);
 		if (tokenizer[0] == "PASS" || tokenizer[0] == "NICK" || tokenizer[0] == "USER") {
 			if (tokenizer[0] == "PASS") {commandPass(tokenizer, fd);}
-			else if (tokenizer[0] == "NICK") {commandNick(tokenizer, fd);}
+			else if (tokenizer[0] == "NICK") {commandNick(tokenizer, fd);
+				if (this->searchClient(fd) != NULL) //null checked
+					return ;
+			}
 			else if (tokenizer[0] == "USER") {commandUser(tokenizer, fd);}
-			user = this->searchTemp(fd);
+			user = this->searchTemp(fd); //null checked
 			if (user && this->getAuth(user) == true) {
 				this->_temp_list.erase(fd);
 				this->addUserList(fd, user);
@@ -196,7 +201,7 @@ void	Server::parsingData(int fd) {
 			}
 		}
 		else {
-			user = this->searchClient(fd);
+			user = this->searchClient(fd); //null checked
 			if (!user)
 				return ;
 			if (tokenizer[0] == "JOIN") {commandJoin(tokenizer, user, fd);}
